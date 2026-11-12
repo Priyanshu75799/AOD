@@ -6,7 +6,7 @@ An ultra-power-efficient **Always-On Display (AOD)** Android application built w
 
 ## Features
 
-- **Live Charging Metrics**: Real-time display of battery percentage, charging current (mA), voltage (mV), temperature (°C), wattage (W), and charging speed category (Normal, Fast, Super Fast).
+- **Live Charging Metrics**: Real-time display of battery percentage, charging current (mA), voltage (mV), temperature (°C), wattage (W), and charging speed category (Slow, Normal, Fast, and Super Fast).
 - **Service Duration Timer**: Dynamic curved arc header showing exact elapsed time since the AOD service started.
 - **AMOLED Burn-In Protection**: Automatic minute-by-minute pixel-shifting system that moves screen components smoothly to protect OLED/AMOLED panels from image retention.
 - **AMOLED-Friendly Typography**: Uses uniform Monospace typography to minimize active subpixel exposure and reduce battery drain.
