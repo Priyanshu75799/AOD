@@ -19,6 +19,7 @@ import com.priyanshudeveloper.aod.AodActivity
 import com.priyanshudeveloper.aod.MainActivity
 import com.priyanshudeveloper.aod.R
 import com.priyanshudeveloper.aod.phoenixengine.core.AodManager
+import com.priyanshudeveloper.aod.phoenixengine.core.AodPrefs
 import com.priyanshudeveloper.aod.phoenixengine.core.BatteryUtils
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -34,6 +35,7 @@ class AodForegroundService : Service() {
     companion object {
         private const val CHANNEL_ID = "aod_service_channel"
         private const val NOTIFICATION_ID = 1001
+        var instance: AodForegroundService? = null
     }
 
     private var isReceiverRegistered = false
@@ -100,6 +102,10 @@ class AodForegroundService : Service() {
             startForeground(NOTIFICATION_ID, notification)
         }
 
+        if (AodManager.serviceStartTimeMs == 0L) {
+            AodManager.serviceStartTimeMs = System.currentTimeMillis()
+            AodManager.initialServiceBatteryPercentage = BatteryUtils.getBatteryInfo(this).percentage
+        }
         AodManager.isServiceRunning.value = true
         startBatteryUpdateTimer()
 
@@ -108,6 +114,9 @@ class AodForegroundService : Service() {
 
     override fun onDestroy() {
         super.onDestroy()
+        instance = null
+        AodManager.isScreenSaverCycleActive = false
+        AodManager.isFirstAodLaunch = true
         updateJob?.cancel()
         serviceScope.cancel()
         if (isReceiverRegistered) {
@@ -119,11 +128,15 @@ class AodForegroundService : Service() {
             isReceiverRegistered = false
         }
         AodManager.isServiceRunning.value = false
+        AodManager.serviceStartTimeMs = 0L
+        AodManager.initialServiceBatteryPercentage = -1
         AodManager.finishAodActivity()
     }
 
     private fun killAppAndService() {
         AodManager.isServiceRunning.value = false
+        AodManager.serviceStartTimeMs = 0L
+        AodManager.initialServiceBatteryPercentage = -1
         AodManager.finishAodActivity()
         stopSelf()
         serviceScope.launch {

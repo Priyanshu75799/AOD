@@ -42,7 +42,7 @@
             android:theme="@style/Theme.AOD" />
 
         <service
-            android:name=".AodForegroundService"
+            android:name=".phoenixengine.service.AodForegroundService"
             android:enabled="true"
             android:exported="false"
             android:foregroundServiceType="specialUse">

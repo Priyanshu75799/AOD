@@ -1,7 +1,9 @@
 package com.priyanshudeveloper.aod
 
+import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.hardware.camera2.CameraCharacteristics
 import android.hardware.camera2.CameraManager
 import android.os.Build
@@ -59,8 +61,8 @@ import androidx.compose.ui.unit.sp
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
-import androidx.lifecycle.lifecycleScope
 import com.priyanshudeveloper.aod.phoenixengine.core.AodManager
+import com.priyanshudeveloper.aod.phoenixengine.core.AodPrefs
 import com.priyanshudeveloper.aod.phoenixengine.core.BatteryUtils
 import com.priyanshudeveloper.aod.ui.theme.AODTheme
 import com.priyanshudeveloper.aod.ui.theme.AmoledFontFamily
@@ -75,6 +77,14 @@ import kotlin.math.sin
 
 class AodActivity : ComponentActivity() {
 
+    private val powerButtonReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) {
+            if (intent.action == Intent.ACTION_USER_PRESENT) {
+                finish()
+            }
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         AodManager.setAodActivity(this)
@@ -82,14 +92,8 @@ class AodActivity : ComponentActivity() {
         setupAodWindow()
         enableEdgeToEdge()
 
-        // Set initial AOD brightness to 50%
-        setWindowBrightness(0.5f)
-
-        // Drop brightness to 1% after 5 seconds
-        lifecycleScope.launch {
-            delay(5000)
-            setWindowBrightness(0.01f)
-        }
+        val filter = IntentFilter(Intent.ACTION_USER_PRESENT)
+        registerReceiver(powerButtonReceiver, filter)
 
         setContent {
             AODTheme {
@@ -98,22 +102,26 @@ class AodActivity : ComponentActivity() {
         }
     }
 
+    override fun onUserLeaveHint() {
+        super.onUserLeaveHint()
+        // Physical Power Button or User Navigation -> Dismiss AOD Activity like Triple Tap
+        finish()
+    }
+
     override fun onDestroy() {
         super.onDestroy()
+        try {
+            toggleTorch(this, false)
+            unregisterReceiver(powerButtonReceiver)
+        } catch (_: Exception) {
+            // Ignore
+        }
         AodManager.setAodActivity(null)
     }
 
     private fun setupAodWindow() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
-            setShowWhenLocked(true)
-            setTurnScreenOn(true)
-        } else {
-            @Suppress("DEPRECATION")
-            window.addFlags(
-                WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or
-                        WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON
-            )
-        }
+        setShowWhenLocked(true)
+        setTurnScreenOn(true)
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
@@ -127,9 +135,9 @@ class AodActivity : ComponentActivity() {
         controller.hide(WindowInsetsCompat.Type.systemBars())
     }
 
-    private fun setWindowBrightness(brightness: Float) {
+    fun setWindowBrightness(brightness: Float) {
         val layoutParams = window.attributes
-        layoutParams.screenBrightness = brightness.coerceIn(0.01f, 1.0f)
+        layoutParams.screenBrightness = brightness.coerceIn(0.001f, 1.0f)
         window.attributes = layoutParams
     }
 }
@@ -169,13 +177,74 @@ fun AodScreen(
     var lastSettingsTapTime by remember { mutableLongStateOf(0L) }
 
     var serviceElapsedSeconds by remember { mutableLongStateOf(0L) }
-    val serviceStartTime = remember { System.currentTimeMillis() }
 
-    // Service duration timer update every second
+    // Screen Saver Sleep Phase State (true = Screen OFF phase, false = Screen ON phase)
+    var isScreenSaverOffPhase by remember { mutableStateOf(false) }
+
+    // Screen Saver & Reduce Brightness Dynamic Runtime Loop
     LaunchedEffect(Unit) {
+        val isSaverEnabled = AodPrefs.isScreenSaverEnabled(context)
+        val screenOnMs = AodPrefs.timerToMillis(AodPrefs.getScreenOnTimer(context))
+        val screenOffMs = AodPrefs.timerToMillis(AodPrefs.getScreenOffTimer(context))
+
+        val reduceChoice = AodPrefs.getReduceBrightnessAfter(context)
+        val reduceDelayMs = AodPrefs.timerToMillis(reduceChoice)
+
+        val activity = context as? AodActivity
+
+        if (isSaverEnabled && screenOnMs > 0L && screenOffMs > 0L) {
+            var isFirstCycle = true
+            // SCREEN SAVER MODE: Continuous Screen-ON & Screen-OFF cycle
+            while (isActive) {
+                // PHASE 1: Screen-ON Phase (Information is visible)
+                isScreenSaverOffPhase = false
+
+                if (isFirstCycle) {
+                    activity?.setWindowBrightness(0.5f)
+                    val reduceJob = launch {
+                        if (reduceDelayMs > 0L && reduceDelayMs < screenOnMs) {
+                            delay(reduceDelayMs)
+                            activity?.setWindowBrightness(0.01f)
+                        }
+                    }
+                    delay(screenOnMs)
+                    reduceJob.cancel()
+                    isFirstCycle = false
+                } else {
+                    activity?.setWindowBrightness(0.01f)
+                    delay(screenOnMs)
+                }
+
+                // PHASE 2: Screen-OFF Phase (Everything turns black; AMOLED/OLED pixels turn off physically, LCD backlight remains awake)
+                isScreenSaverOffPhase = true
+                activity?.setWindowBrightness(0.001f)
+                delay(screenOffMs)
+            }
+        } else if (isSaverEnabled && screenOnMs == 0L) {
+            // Screen-ON timer is "Off": stay in black screen-off phase
+            isScreenSaverOffPhase = true
+            activity?.setWindowBrightness(0.001f)
+        } else {
+            // STANDARD ALWAYS-ON DISPLAY MODE (Continuous screen-on)
+            isScreenSaverOffPhase = false
+            activity?.setWindowBrightness(0.5f)
+            if (reduceDelayMs > 0L) {
+                delay(reduceDelayMs)
+                activity?.setWindowBrightness(0.01f)
+            }
+        }
+    }
+
+    // Service duration timer update every second using persistent AodManager start time
+    LaunchedEffect(Unit) {
+        if (AodManager.serviceStartTimeMs == 0L) {
+            AodManager.serviceStartTimeMs = System.currentTimeMillis()
+            AodManager.initialServiceBatteryPercentage = batteryInfo.percentage
+        }
+        val startTime = AodManager.serviceStartTimeMs
         while (isActive) {
             val now = System.currentTimeMillis()
-            serviceElapsedSeconds = (now - serviceStartTime) / 1000L
+            serviceElapsedSeconds = (now - startTime) / 1000L
             delay(1000L)
         }
     }
@@ -261,244 +330,253 @@ fun AodScreen(
             }
             .padding(horizontal = 20.dp, vertical = 32.dp)
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .offset(x = animatedShiftX, y = animatedShiftY),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.SpaceBetween
-        ) {
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Time & Date Header
+        if (!isScreenSaverOffPhase) {
             Column(
-                horizontalAlignment = Alignment.CenterHorizontally
+                modifier = Modifier
+                    .fillMaxSize()
+                    .offset(x = animatedShiftX, y = animatedShiftY),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.SpaceBetween
             ) {
-                Text(
-                    text = currentTimeText,
-                    fontSize = 44.sp,
-                    fontWeight = FontWeight.Light,
-                    fontFamily = AmoledFontFamily,
-                    color = Color(0xFFE2E8F0),
-                    letterSpacing = 1.sp
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = currentDateText,
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Medium,
-                    fontFamily = AmoledFontFamily,
-                    color = Color(0xFF8E9BAE)
-                )
-            }
+                Spacer(modifier = Modifier.height(16.dp))
 
-            // Circular Arc Gauge with Curved Arc Header OUTSIDE ABOVE (Timer & Current)
-            Box(
-                contentAlignment = Alignment.Center,
-                modifier = Modifier.size(230.dp)
-            ) {
-                Canvas(modifier = Modifier.fillMaxSize()) {
-                    val strokeWidth = 10.dp.toPx()
-                    val startAngle = 135f
-                    val totalSweep = 270f
-
-                    // 1. Track Arc
-                    drawArc(
-                        color = Color(0xFF1E2330),
-                        startAngle = startAngle,
-                        sweepAngle = totalSweep,
-                        useCenter = false,
-                        style = Stroke(width = strokeWidth, cap = StrokeCap.Round)
-                    )
-
-                    // 2. Active Arc
-                    val activeSweep = (animatedPercentage / 100f) * totalSweep
-                    drawArc(
-                        color = Color(0xFF3B82F6),
-                        startAngle = startAngle,
-                        sweepAngle = activeSweep,
-                        useCenter = false,
-                        style = Stroke(width = strokeWidth, cap = StrokeCap.Round)
-                    )
-
-                    // 3. Curved Arc Text OUTSIDE ABOVE the Circular Gauge (Service Timer & Real-time Current)
-                    val curvedArcRadius = 122.dp.toPx()
-                    val androidPath = android.graphics.Path().apply {
-                        addArc(
-                            center.x - curvedArcRadius,
-                            center.y - curvedArcRadius,
-                            center.x + curvedArcRadius,
-                            center.y + curvedArcRadius,
-                            205f,
-                            130f
-                        )
-                    }
-
-                    val serviceHours = serviceElapsedSeconds / 3600
-                    val serviceMins = (serviceElapsedSeconds % 3600) / 60
-                    val serviceSecs = serviceElapsedSeconds % 60
-                    val timerText = if (serviceHours > 0) {
-                        "%02d:%02d:%02d".format(serviceHours, serviceMins, serviceSecs)
-                    } else {
-                        "%02d:%02d".format(serviceMins, serviceSecs)
-                    }
-
-                    val curvedText = "Time $timerText  • Current ${batteryInfo.currentMa} mA"
-
-                    drawContext.canvas.nativeCanvas.drawTextOnPath(
-                        curvedText,
-                        androidPath,
-                        0f,
-                        -10f,
-                        android.graphics.Paint().apply {
-                            color = android.graphics.Color.parseColor("#8E9BAE")
-                            textSize = 10.sp.toPx()
-                            typeface = android.graphics.Typeface.MONOSPACE
-                            textAlign = android.graphics.Paint.Align.CENTER
-                            isAntiAlias = true
-                        }
-                    )
-                }
-
+                // Time & Date Header
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
-                        text = "${batteryInfo.percentage}%",
-                        fontSize = 38.sp,
-                        fontWeight = FontWeight.Bold,
+                        text = currentTimeText,
+                        fontSize = 44.sp,
+                        fontWeight = FontWeight.Light,
+                        fontFamily = AmoledFontFamily,
+                        color = Color(0xFFE2E8F0),
+                        letterSpacing = 1.sp
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = currentDateText,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Medium,
+                        fontFamily = AmoledFontFamily,
+                        color = Color(0xFF8E9BAE)
+                    )
+                }
+
+                // Circular Arc Gauge with Curved Arc Header OUTSIDE ABOVE (Timer & Current)
+                Box(
+                    contentAlignment = Alignment.Center,
+                    modifier = Modifier.size(260.dp)
+                ) {
+                    Canvas(modifier = Modifier.fillMaxSize()) {
+                        val strokeWidth = 10.dp.toPx()
+                        val startAngle = 135f
+                        val totalSweep = 270f
+
+                        // 1. Track Arc
+                        drawArc(
+                            color = Color(0xFF1E2330),
+                            startAngle = startAngle,
+                            sweepAngle = totalSweep,
+                            useCenter = false,
+                            style = Stroke(width = strokeWidth, cap = StrokeCap.Round)
+                        )
+
+                        // 2. Active Arc
+                        val activeSweep = (animatedPercentage / 100f) * totalSweep
+                        drawArc(
+                            color = Color(0xFF3B82F6),
+                            startAngle = startAngle,
+                            sweepAngle = activeSweep,
+                            useCenter = false,
+                            style = Stroke(width = strokeWidth, cap = StrokeCap.Round)
+                        )
+
+                        // 3. Curved Arc Text OUTSIDE ABOVE the Circular Gauge (Service Timer & Real-time Current)
+                        val curvedArcRadius = 122.dp.toPx()
+                        val androidPath = android.graphics.Path().apply {
+                            addArc(
+                                center.x - curvedArcRadius,
+                                center.y - curvedArcRadius,
+                                center.x + curvedArcRadius,
+                                center.y + curvedArcRadius,
+                                205f,
+                                130f
+                            )
+                        }
+
+                        val serviceHours = serviceElapsedSeconds / 3600
+                        val serviceMins = (serviceElapsedSeconds % 3600) / 60
+                        val serviceSecs = serviceElapsedSeconds % 60
+                        val timerText = if (serviceHours > 0) {
+                            "%02d:%02d:%02d".format(serviceHours, serviceMins, serviceSecs)
+                        } else {
+                            "%02d:%02d".format(serviceMins, serviceSecs)
+                        }
+
+                        val initialPercent = if (AodManager.initialServiceBatteryPercentage >= 0) {
+                            AodManager.initialServiceBatteryPercentage
+                        } else {
+                            batteryInfo.percentage
+                        }
+                        val batteryGained = (batteryInfo.percentage - initialPercent).coerceAtLeast(0)
+
+                        val curvedText = "Time $timerText  •  +$batteryGained%  •  ${batteryInfo.currentMa} mA"
+
+                        drawContext.canvas.nativeCanvas.drawTextOnPath(
+                            curvedText,
+                            androidPath,
+                            0f,
+                            -30f,
+                            android.graphics.Paint().apply {
+                                color = android.graphics.Color.parseColor("#8E9BAE")
+                                textSize = 10.sp.toPx()
+                                typeface = android.graphics.Typeface.MONOSPACE
+                                textAlign = android.graphics.Paint.Align.CENTER
+                                isAntiAlias = true
+                            }
+                        )
+                    }
+
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = "${batteryInfo.percentage}%",
+                            fontSize = 38.sp,
+                            fontWeight = FontWeight.Bold,
+                            fontFamily = AmoledFontFamily,
+                            color = Color(0xFFE2E8F0)
+                        )
+                        Spacer(modifier = Modifier.height(2.dp))
+                        Text(
+                            text = batteryInfo.chargingStatusText,
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Medium,
+                            fontFamily = AmoledFontFamily,
+                            color = Color(0xFF8E9BAE),
+                            letterSpacing = 1.5.sp
+                        )
+                    }
+                }
+
+                // 3 Card Containers
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    AodInfoCard(
+                        modifier = Modifier.weight(1f),
+                        value = "${"%.1f".format(batteryInfo.temperatureCelsius)}°C",
+                        label = "Battery temperature"
+                    )
+                    AodInfoCard(
+                        modifier = Modifier.weight(1f),
+                        value = "${batteryInfo.voltageMv} mV",
+                        label = "Battery voltage"
+                    )
+                    AodInfoCard(
+                        modifier = Modifier.weight(1f),
+                        value = batteryInfo.estimateString,
+                        label = "Estimate"
+                    )
+                }
+
+                // Bottom Wattage & Status
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = "${"%.1f".format(batteryInfo.wattage)} W",
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Medium,
                         fontFamily = AmoledFontFamily,
                         color = Color(0xFFE2E8F0)
                     )
                     Spacer(modifier = Modifier.height(2.dp))
                     Text(
-                        text = batteryInfo.chargingStatusText,
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.Medium,
+                        text = batteryInfo.chargingSpeedCategory,
+                        fontSize = 12.sp,
                         fontFamily = AmoledFontFamily,
-                        color = Color(0xFF8E9BAE),
-                        letterSpacing = 1.5.sp
+                        color = Color(0xFF8E9BAE)
                     )
                 }
-            }
 
-            // 3 Card Containers
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                AodInfoCard(
-                    modifier = Modifier.weight(1f),
-                    value = "${"%.1f".format(batteryInfo.temperatureCelsius)}°C",
-                    label = "Battery temperature"
-                )
-                AodInfoCard(
-                    modifier = Modifier.weight(1f),
-                    value = "${batteryInfo.voltageMv} mV",
-                    label = "Battery voltage"
-                )
-                AodInfoCard(
-                    modifier = Modifier.weight(1f),
-                    value = batteryInfo.estimateString,
-                    label = "Estimate"
-                )
-            }
-
-            // Bottom Wattage & Status
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text(
-                    text = "${"%.1f".format(batteryInfo.wattage)} W",
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Medium,
-                    fontFamily = AmoledFontFamily,
-                    color = Color(0xFFE2E8F0)
-                )
-                Spacer(modifier = Modifier.height(2.dp))
-                Text(
-                    text = batteryInfo.chargingSpeedCategory,
-                    fontSize = 12.sp,
-                    fontFamily = AmoledFontFamily,
-                    color = Color(0xFF8E9BAE)
-                )
-            }
-
-            // Bottom Action Bar
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 8.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                // Torch Button (Tap-and-Hold to turn ON, Single tap to turn OFF)
-                Box(
+                // Bottom Action Bar
+                Row(
                     modifier = Modifier
-                        .size(40.dp)
-                        .background(if (isTorchOn) Color(0xFF3B82F6) else Color(0xFF141721), CircleShape)
-                        .pointerInput(Unit) {
-                            detectTapGestures(
-                                onTap = {
-                                    if (isTorchOn) {
-                                        isTorchOn = false
-                                        toggleTorch(context, false)
-                                    }
-                                },
-                                onLongPress = {
-                                    if (!isTorchOn) {
-                                        isTorchOn = true
-                                        toggleTorch(context, true)
-                                    }
-                                }
-                            )
-                        },
-                    contentAlignment = Alignment.Center
+                        .fillMaxWidth()
+                        .padding(horizontal = 8.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    TorchCanvasIcon(
-                        modifier = Modifier.size(20.dp),
-                        isOn = isTorchOn
-                    )
-                }
-
-                Text(
-                    text = "Triple tap to dismiss",
-                    fontSize = 10.sp,
-                    fontFamily = AmoledFontFamily,
-                    color = Color(0xFF475569)
-                )
-
-                // Settings Button (Requires Double-Tap)
-                Box(
-                    modifier = Modifier
-                        .size(40.dp)
-                        .background(Color(0xFF141721), CircleShape)
-                        .clickable {
-                            val currentTime = System.currentTimeMillis()
-                            if (currentTime - lastSettingsTapTime < 500L) {
-                                try {
-                                    val batteryIntent = Intent(Intent.ACTION_POWER_USAGE_SUMMARY).apply {
-                                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    // Torch Button (Tap-and-Hold to turn ON, Single tap to turn OFF)
+                    Box(
+                        modifier = Modifier
+                            .size(40.dp)
+                            .background(if (isTorchOn) Color(0xFF3B82F6) else Color(0xFF141721), CircleShape)
+                            .pointerInput(Unit) {
+                                detectTapGestures(
+                                    onTap = {
+                                        if (isTorchOn) {
+                                            isTorchOn = false
+                                            toggleTorch(context, false)
+                                        }
+                                    },
+                                    onLongPress = {
+                                        if (!isTorchOn) {
+                                            isTorchOn = true
+                                            toggleTorch(context, true)
+                                        }
                                     }
-                                    context.startActivity(batteryIntent)
-                                } catch (_: Exception) {
+                                )
+                            },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        TorchCanvasIcon(
+                            modifier = Modifier.size(20.dp),
+                            isOn = isTorchOn
+                        )
+                    }
+
+                    Text(
+                        text = "Triple tap to dismiss",
+                        fontSize = 10.sp,
+                        fontFamily = AmoledFontFamily,
+                        color = Color(0xFF475569)
+                    )
+
+                    // Settings Button (Requires Double-Tap)
+                    Box(
+                        modifier = Modifier
+                            .size(40.dp)
+                            .background(Color(0xFF141721), CircleShape)
+                            .clickable {
+                                val currentTime = System.currentTimeMillis()
+                                if (currentTime - lastSettingsTapTime < 500L) {
                                     try {
-                                        val settingsIntent = Intent(Settings.ACTION_SETTINGS).apply {
+                                        val batteryIntent = Intent(Intent.ACTION_POWER_USAGE_SUMMARY).apply {
                                             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                                         }
-                                        context.startActivity(settingsIntent)
+                                        context.startActivity(batteryIntent)
                                     } catch (_: Exception) {
-                                        // Ignore if settings cannot be opened
+                                        try {
+                                            val settingsIntent = Intent(Settings.ACTION_SETTINGS).apply {
+                                                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                            }
+                                            context.startActivity(settingsIntent)
+                                        } catch (_: Exception) {
+                                            // Ignore if settings cannot be opened
+                                        }
                                     }
+                                    lastSettingsTapTime = 0L
+                                } else {
+                                    lastSettingsTapTime = currentTime
                                 }
-                                lastSettingsTapTime = 0L
-                            } else {
-                                lastSettingsTapTime = currentTime
-                            }
-                        },
-                    contentAlignment = Alignment.Center
-                ) {
-                    SettingsCanvasIcon(modifier = Modifier.size(20.dp))
+                            },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        SettingsCanvasIcon(modifier = Modifier.size(20.dp))
+                    }
                 }
             }
         }

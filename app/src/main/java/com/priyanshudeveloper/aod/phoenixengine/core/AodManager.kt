@@ -8,6 +8,10 @@ import java.lang.ref.WeakReference
 object AodManager {
     val isServiceRunning = MutableStateFlow(value = false)
     val batteryInfo = MutableStateFlow(BatteryInfo())
+    var serviceStartTimeMs: Long = 0L
+    var initialServiceBatteryPercentage: Int = -1
+    var isFirstAodLaunch: Boolean = true
+    var isScreenSaverCycleActive: Boolean = false
     private var aodActivityRef: WeakReference<Activity>? = null
 
     fun setAodActivity(activity: Activity?) {
