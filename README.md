@@ -10,7 +10,7 @@ An ultra-power-efficient, feature-packed **Always-On Display (AOD)** and Battery
 - **Dual Phase Cycling**: Continuous automated cycle between **Screen-ON** (information visible) and **Screen-OFF** (black sleep phase).
 - **Customizable Screen-ON Timer**: Options range from `Off`, `10sec`, `20sec`, `30sec`, `60sec`, `1min` up to `3hr`, and `Always on`.
 - **Customizable Screen-OFF Timer**: Options range from `Always on`, `10sec`, `20sec`, `30sec`, `60sec`, `1min` up to `3hr`.
-- **Smart Auto-Defaulting**:
+- **Smart Auto-Defaulting (Prevent Crashes and abnormal behaviours)**:
   - Fresh installation or toggling Screen Saver OFF restores both timers to `'Always on'`.
   - Changing either section first automatically sets the opposing timer to `'10sec'` for seamless UX.
 
@@ -41,7 +41,6 @@ An ultra-power-efficient, feature-packed **Always-On Display (AOD)** and Battery
   - Automatic torch cleanup upon exiting AOD or activity destruction.
 - **Double-Tap Settings**: Quick double-tap on the settings icon directly opens native Android System Battery Settings.
 - **Triple-Tap Dismiss**: Triple tap anywhere on screen immediately dismisses the AOD overlay.
-- **Hardware Unlock & Button Dismiss**: Physical power button, fingerprint/face unlock (`ACTION_USER_PRESENT`), or navigation gestures finish AOD cleanly.
 
 ### ️ 6. Foreground Service & System Integration
 - **Auto Trigger on Plug-In**: Automatically starts service and launches AOD when connected to AC, USB, or Wireless charger (`ACTION_POWER_CONNECTED` / `ACTION_SCREEN_OFF`).
