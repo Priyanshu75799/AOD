@@ -4,7 +4,7 @@ An ultra-power-efficient, feature-packed **Always-On Display (AOD)**, Charging T
 
 ---
 
-## 🌟 Version Comparison (v1.2 vs v1.3)
+## Version Comparison (v1.2 vs v1.3)
 
 | Feature / Capabilities | 📌 Version 1.2 | 🚀 Version 1.3 (Latest) |
 | :--- | :---: | :---: |
@@ -29,14 +29,14 @@ An ultra-power-efficient, feature-packed **Always-On Display (AOD)**, Charging T
 
 ---
 
-## 🚀 Key Features in Version 1.3
+## Key Features in Version 1.3
 
-### 📱 1. Navigation & Settings Restructuring
+### 1. Navigation & Settings Restructuring
 - **Top Bar Gear Icon**: Main Dashboard top-right corner features a Settings Gear icon leading directly to the Settings Section.
 - **AOD Controls Hub**: Settings section features a dedicated **'AOD controls'** block, housing Screen Saver timers, Reduce Brightness options, and AOD Refresh Rate settings.
 - **System Back Gesture Navigation**: Integrated `BackHandler` ensures pressing the device's back button navigates backwards smoothly (`AodControls` → `Settings` → `Dashboard`) without exiting the app.
 
-### ⚡ 2. Independent Charging Telemetry Monitor Service
+### 2. Independent Charging Telemetry Monitor Service
 - **Dedicated Telemetry Service**: Operates as an independent foreground service (`ChargingTelemetryService`) without clashing with `AodForegroundService`.
 - **Min/Max Charging Telemetry Window**: Real-time recording of:
   - **Min & Max Charging Current (mA)**
@@ -44,7 +44,7 @@ An ultra-power-efficient, feature-packed **Always-On Display (AOD)**, Charging T
   - **Min & Max Charging Power (Wattage - W)**
   - Live charging metrics with instant Reset Stats capability.
 
-### 📊 3. Stock Android Pixel Style Battery Usage Graph
+### 3. Stock Android Pixel Style Battery Usage Graph
 - **Pixel Stock Design**: Styled to match Stock Android / Pixel Battery usage screens:
   - Current battery level percentage header (`18%`).
   - Right Y-Axis grid lines & percentage labels (`100%`, `50%`, `0%`).
@@ -53,16 +53,16 @@ An ultra-power-efficient, feature-packed **Always-On Display (AOD)**, Charging T
   - **Dotted Projected Charging Line (`. . . . . .`)**: Slopes upwards towards `100%` when phone is plugged in.
 - **Top 3 Battery Consuming Apps**: Auto-refreshing app usage statistics with instant `ON_RESUME` permission grant detection.
 
-### 🌙 4. Extra Dim Feature Detection & Power Saving
+### 4. Extra Dim Feature Detection & Power Saving
 - **OEM Extra Dim Detection**: Automatically detects Extra Dim, Night Mode, and Eye Protection features across Android 12+, Xiaomi/MIUI, Oppo/ColorOS, Vivo/FuntouchOS, Realme, Samsung, and Pixel devices.
 - **Dynamic Advice Banner**: Recommends enabling Extra Dim in Settings for extra battery savings.
 - **Ultra-Dimming AOD Scrim**: Automatically applies ultra-low screen brightness (`0.0005f`) and dark scrim overlays when Extra Dim is active.
 
-### 🔒 5. Universal Power Button Fail-Safe Dismissal
+### 5. Universal Power Button Fail-Safe Dismissal
 - **Physical Power Button Interception**: Pressing the physical power button (`KEYCODE_POWER`) immediately dismisses `AodActivity`.
 - **Universal Lockscreen Support**: Handles `ACTION_SCREEN_OFF`, `ACTION_SCREEN_ON`, `ACTION_USER_PRESENT`, and `ACTION_CLOSE_SYSTEM_DIALOGS`, ensuring seamless dismissal for Fingerprint, PIN, Pattern, Swipe, and No Lock Screen devices without crashes or bugs.
 
-### ⚙️ 6. Extended Customization & Options
+### 6. Extended Customization & Options
 - **Clock Time Format**: Toggle between **24-Hour** (`13:45`, Default) and **12-Hour AM/PM** (`1:45 PM`) formats.
 - **Media Player Widget**: Show currently playing music title and artist details on the AOD screen (Default: OFF).
 - **OLED Burn-in Protection Toggle**: Enable minute-by-minute pixel shifting (Default: ON). LCD display users can turn this OFF to save CPU cycles.
@@ -71,7 +71,7 @@ An ultra-power-efficient, feature-packed **Always-On Display (AOD)**, Charging T
 
 ---
 
-## 🛠 Tech Stack & Architecture
+## Tech Stack & Architecture
 
 - **Language**: Kotlin 2.2+
 - **UI Framework**: Jetpack Compose (Material 3)
@@ -83,7 +83,7 @@ An ultra-power-efficient, feature-packed **Always-On Display (AOD)**, Charging T
 
 ---
 
-## 🚀 Getting Started
+## Getting Started
 
 1. **Clone the Repository**:
    ```bash
