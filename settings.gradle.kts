@@ -22,6 +22,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "AOD"
+rootProject.name = "TurboOverlay"
 include(":app")
- 
