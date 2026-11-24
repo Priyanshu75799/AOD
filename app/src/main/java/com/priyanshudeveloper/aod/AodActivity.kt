@@ -9,6 +9,7 @@ import android.hardware.camera2.CameraManager
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
+import android.view.KeyEvent
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -37,7 +38,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
@@ -56,14 +56,19 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import com.priyanshudeveloper.aod.phoenixengine.core.AodManager
 import com.priyanshudeveloper.aod.phoenixengine.core.AodPrefs
 import com.priyanshudeveloper.aod.phoenixengine.core.BatteryUtils
+import com.priyanshudeveloper.aod.phoenixengine.core.ExtraDimUtils
+import com.priyanshudeveloper.aod.phoenixengine.core.MediaHelper
+import com.priyanshudeveloper.aod.phoenixengine.core.MediaInfo
 import com.priyanshudeveloper.aod.ui.theme.AODTheme
 import com.priyanshudeveloper.aod.ui.theme.AmoledFontFamily
 import kotlinx.coroutines.delay
@@ -77,10 +82,16 @@ import kotlin.math.sin
 
 class AodActivity : ComponentActivity() {
 
-    private val powerButtonReceiver = object : BroadcastReceiver() {
+    private val screenEventsReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
-            if (intent.action == Intent.ACTION_USER_PRESENT) {
-                finish()
+            when (intent.action) {
+                Intent.ACTION_USER_PRESENT,
+                Intent.ACTION_SCREEN_OFF,
+                Intent.ACTION_SCREEN_ON,
+                @Suppress("DEPRECATION")
+                Intent.ACTION_CLOSE_SYSTEM_DIALOGS -> {
+                    finish()
+                }
             }
         }
     }
@@ -92,8 +103,19 @@ class AodActivity : ComponentActivity() {
         setupAodWindow()
         enableEdgeToEdge()
 
-        val filter = IntentFilter(Intent.ACTION_USER_PRESENT)
-        registerReceiver(powerButtonReceiver, filter)
+        val filter = IntentFilter().apply {
+            addAction(Intent.ACTION_USER_PRESENT)
+            addAction(Intent.ACTION_SCREEN_OFF)
+            addAction(Intent.ACTION_SCREEN_ON)
+            @Suppress("DEPRECATION")
+            addAction(Intent.ACTION_CLOSE_SYSTEM_DIALOGS)
+        }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            registerReceiver(screenEventsReceiver, filter, Context.RECEIVER_EXPORTED)
+        } else {
+            registerReceiver(screenEventsReceiver, filter)
+        }
 
         setContent {
             AODTheme {
@@ -102,9 +124,16 @@ class AodActivity : ComponentActivity() {
         }
     }
 
+    override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
+        if (keyCode == KeyEvent.KEYCODE_POWER) {
+            finish()
+            return true
+        }
+        return super.onKeyDown(keyCode, event)
+    }
+
     override fun onUserLeaveHint() {
         super.onUserLeaveHint()
-        // Physical Power Button or User Navigation -> Dismiss AOD Activity like Triple Tap
         finish()
     }
 
@@ -112,7 +141,7 @@ class AodActivity : ComponentActivity() {
         super.onDestroy()
         try {
             toggleTorch(this, false)
-            unregisterReceiver(powerButtonReceiver)
+            unregisterReceiver(screenEventsReceiver)
         } catch (_: Exception) {
             // Ignore
         }
@@ -137,7 +166,7 @@ class AodActivity : ComponentActivity() {
 
     fun setWindowBrightness(brightness: Float) {
         val layoutParams = window.attributes
-        layoutParams.screenBrightness = brightness.coerceIn(0.001f, 1.0f)
+        layoutParams.screenBrightness = brightness.coerceIn(0.0005f, 1.0f)
         window.attributes = layoutParams
     }
 }
@@ -165,7 +194,7 @@ fun AodScreen(
     onDismiss: () -> Unit
 ) {
     val context = LocalContext.current
-    val batteryInfo by AodManager.batteryInfo.collectAsState()
+    var batteryInfo by remember { mutableStateOf(BatteryUtils.getBatteryInfo(context)) }
 
     var currentTimeText by remember { mutableStateOf("") }
     var currentDateText by remember { mutableStateOf("") }
@@ -181,6 +210,26 @@ fun AodScreen(
     // Screen Saver Sleep Phase State (true = Screen OFF phase, false = Screen ON phase)
     var isScreenSaverOffPhase by remember { mutableStateOf(false) }
 
+    // Read Preferences for Clock Format, Arc Color, OLED Protection, Media Player, and Refresh Rate
+    val clockFormatPref = remember { AodPrefs.getClockFormat(context) }
+    val isMediaPlayerOptionEnabled = remember { AodPrefs.isMediaPlayerEnabled(context) }
+    val isOledProtectionOptionEnabled = remember { AodPrefs.isOledProtectionEnabled(context) }
+    val arcColorHexPref = remember { AodPrefs.getArcColorHex(context) }
+    val updateIntervalMs = remember { AodPrefs.getAodUpdateIntervalMillis(context) }
+
+    val isExtraDimActive = remember { ExtraDimUtils.isExtraDimEnabled(context) }
+
+    var mediaInfo by remember { mutableStateOf(MediaInfo()) }
+
+    // Parse Battery Arc Color
+    val activeArcColor = remember(arcColorHexPref) {
+        try {
+            Color(android.graphics.Color.parseColor(arcColorHexPref))
+        } catch (_: Exception) {
+            Color.White
+        }
+    }
+
     // Screen Saver & Reduce Brightness Dynamic Runtime Loop
     LaunchedEffect(Unit) {
         val isSaverEnabled = AodPrefs.isScreenSaverEnabled(context)
@@ -191,12 +240,11 @@ fun AodScreen(
         val reduceDelayMs = AodPrefs.timerToMillis(reduceChoice)
 
         val activity = context as? AodActivity
+        val minDimBrightness = if (isExtraDimActive) 0.0005f else 0.01f
 
         if (isSaverEnabled && screenOnMs > 0L && screenOffMs > 0L) {
             var isFirstCycle = true
-            // SCREEN SAVER MODE: Continuous Screen-ON & Screen-OFF cycle
             while (isActive) {
-                // PHASE 1: Screen-ON Phase (Information is visible)
                 isScreenSaverOffPhase = false
 
                 if (isFirstCycle) {
@@ -204,38 +252,35 @@ fun AodScreen(
                     val reduceJob = launch {
                         if (reduceDelayMs > 0L && reduceDelayMs < screenOnMs) {
                             delay(reduceDelayMs)
-                            activity?.setWindowBrightness(0.01f)
+                            activity?.setWindowBrightness(minDimBrightness)
                         }
                     }
                     delay(screenOnMs)
                     reduceJob.cancel()
                     isFirstCycle = false
                 } else {
-                    activity?.setWindowBrightness(0.01f)
+                    activity?.setWindowBrightness(minDimBrightness)
                     delay(screenOnMs)
                 }
 
-                // PHASE 2: Screen-OFF Phase (Everything turns black; AMOLED/OLED pixels turn off physically, LCD backlight remains awake)
                 isScreenSaverOffPhase = true
-                activity?.setWindowBrightness(0.001f)
+                activity?.setWindowBrightness(0.0005f)
                 delay(screenOffMs)
             }
         } else if (isSaverEnabled && screenOnMs == 0L) {
-            // Screen-ON timer is "Off": stay in black screen-off phase
             isScreenSaverOffPhase = true
-            activity?.setWindowBrightness(0.001f)
+            activity?.setWindowBrightness(0.0005f)
         } else {
-            // STANDARD ALWAYS-ON DISPLAY MODE (Continuous screen-on)
             isScreenSaverOffPhase = false
             activity?.setWindowBrightness(0.5f)
             if (reduceDelayMs > 0L) {
                 delay(reduceDelayMs)
-                activity?.setWindowBrightness(0.01f)
+                activity?.setWindowBrightness(minDimBrightness)
             }
         }
     }
 
-    // Service duration timer update every second using persistent AodManager start time
+    // Service duration timer update
     LaunchedEffect(Unit) {
         if (AodManager.serviceStartTimeMs == 0L) {
             AodManager.serviceStartTimeMs = System.currentTimeMillis()
@@ -254,45 +299,57 @@ fun AodScreen(
     var shiftY by remember { mutableStateOf(0.dp) }
 
     val animatedShiftX by animateDpAsState(
-        targetValue = shiftX,
+        targetValue = if (isOledProtectionOptionEnabled) shiftX else 0.dp,
         animationSpec = tween(durationMillis = 1000),
         label = "shiftXAnimation"
     )
     val animatedShiftY by animateDpAsState(
-        targetValue = shiftY,
+        targetValue = if (isOledProtectionOptionEnabled) shiftY else 0.dp,
         animationSpec = tween(durationMillis = 1000),
         label = "shiftYAnimation"
     )
 
-    // AMOLED Burn-In Protection: shift position slightly every minute (60 seconds)
-    LaunchedEffect(Unit) {
-        while (isActive) {
-            delay(60000L)
-            var newX: Int
-            var newY: Int
-            do {
-                newX = (-12..12).random()
-                newY = (-12..12).random()
-            } while (newX == shiftX.value.toInt() && newY == shiftY.value.toInt())
+    // Pixel shifting loop (runs only if OLED Protection is enabled)
+    LaunchedEffect(isOledProtectionOptionEnabled) {
+        if (isOledProtectionOptionEnabled) {
+            while (isActive) {
+                delay(60000L)
+                var newX: Int
+                var newY: Int
+                do {
+                    newX = (-12..12).random()
+                    newY = (-12..12).random()
+                } while (newX == shiftX.value.toInt() && newY == shiftY.value.toInt())
 
-            shiftX = newX.dp
-            shiftY = newY.dp
+                shiftX = newX.dp
+                shiftY = newY.dp
+            }
+        } else {
+            shiftX = 0.dp
+            shiftY = 0.dp
         }
     }
 
-    // Always update clock and battery charging data every second on AOD
-    LaunchedEffect(Unit) {
-        val timeFormat = SimpleDateFormat("h:mm a", Locale.getDefault())
+    // Dynamic AOD Telemetry & Clock Update Loop strictly adhering to user's selected update frequency
+    LaunchedEffect(updateIntervalMs) {
+        val timePattern = if (clockFormatPref == "12-Hour AM/PM") "h:mm a" else "HH:mm"
+        val timeFormat = SimpleDateFormat(timePattern, Locale.getDefault())
         val dateFormat = SimpleDateFormat("EEE, MMM d", Locale.getDefault())
-        while (true) {
+
+        while (isActive) {
             val now = Date()
             currentTimeText = timeFormat.format(now)
             currentDateText = dateFormat.format(now)
 
-            // Force refresh battery charging data every second
-            AodManager.batteryInfo.value = BatteryUtils.getBatteryInfo(context)
+            // Refresh Battery Charging Data strictly at user-configured rate
+            batteryInfo = BatteryUtils.getBatteryInfo(context)
 
-            delay(1000)
+            // Refresh Media Info if feature enabled
+            if (isMediaPlayerOptionEnabled) {
+                mediaInfo = MediaHelper.getCurrentMediaInfo(context)
+            }
+
+            delay(updateIntervalMs)
         }
     }
 
@@ -318,7 +375,6 @@ fun AodScreen(
                         lastTapTime = currentTime
 
                         if (tapCount >= 3) {
-                            // Turn off torch when dismissing AOD
                             if (isTorchOn) {
                                 isTorchOn = false
                                 toggleTorch(context, false)
@@ -328,7 +384,7 @@ fun AodScreen(
                     }
                 )
             }
-            .padding(horizontal = 20.dp, vertical = 32.dp)
+            .padding(horizontal = 20.dp, vertical = 28.dp)
     ) {
         if (!isScreenSaverOffPhase) {
             Column(
@@ -338,7 +394,7 @@ fun AodScreen(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.SpaceBetween
             ) {
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(12.dp))
 
                 // Time & Date Header
                 Column(
@@ -362,10 +418,32 @@ fun AodScreen(
                     )
                 }
 
-                // Circular Arc Gauge with Curved Arc Header OUTSIDE ABOVE (Timer & Current)
+                // Media Player Card (If enabled and playing)
+                if (isMediaPlayerOptionEnabled && mediaInfo.isPlaying) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth(0.85f)
+                            .background(Color(0xFF0F121C), RoundedCornerShape(10.dp))
+                            .border(1.dp, Color(0xFF1E2330), RoundedCornerShape(10.dp))
+                            .padding(horizontal = 12.dp, vertical = 6.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        Text(
+                            text = "🎵 ${mediaInfo.title} • ${mediaInfo.artist}",
+                            fontSize = 11.sp,
+                            color = Color(0xFF60A5FA),
+                            fontFamily = AmoledFontFamily,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+                }
+
+                // Circular Arc Gauge with Custom Color & Curved Arc Header
                 Box(
                     contentAlignment = Alignment.Center,
-                    modifier = Modifier.size(260.dp)
+                    modifier = Modifier.size(250.dp)
                 ) {
                     Canvas(modifier = Modifier.fillMaxSize()) {
                         val strokeWidth = 10.dp.toPx()
@@ -381,18 +459,18 @@ fun AodScreen(
                             style = Stroke(width = strokeWidth, cap = StrokeCap.Round)
                         )
 
-                        // 2. Active Arc
+                        // 2. Active Arc with User-Selected Color
                         val activeSweep = (animatedPercentage / 100f) * totalSweep
                         drawArc(
-                            color = Color(0xFF3B82F6),
+                            color = activeArcColor,
                             startAngle = startAngle,
                             sweepAngle = activeSweep,
                             useCenter = false,
                             style = Stroke(width = strokeWidth, cap = StrokeCap.Round)
                         )
 
-                        // 3. Curved Arc Text OUTSIDE ABOVE the Circular Gauge (Service Timer & Real-time Current)
-                        val curvedArcRadius = 122.dp.toPx()
+                        // 3. Curved Arc Text OUTSIDE ABOVE the Circular Gauge
+                        val curvedArcRadius = 118.dp.toPx()
                         val androidPath = android.graphics.Path().apply {
                             addArc(
                                 center.x - curvedArcRadius,
@@ -426,7 +504,7 @@ fun AodScreen(
                             curvedText,
                             androidPath,
                             0f,
-                            -30f,
+                            -28f,
                             android.graphics.Paint().apply {
                                 color = android.graphics.Color.parseColor("#8E9BAE")
                                 textSize = 10.sp.toPx()
@@ -565,7 +643,7 @@ fun AodScreen(
                                             }
                                             context.startActivity(settingsIntent)
                                         } catch (_: Exception) {
-                                            // Ignore if settings cannot be opened
+                                            // Ignore
                                         }
                                     }
                                     lastSettingsTapTime = 0L
@@ -579,6 +657,15 @@ fun AodScreen(
                     }
                 }
             }
+        }
+
+        // Extra Dimming Scrim Overlay if Extra Dim is active on device
+        if (isExtraDimActive) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Black.copy(alpha = 0.35f))
+            )
         }
     }
 }
@@ -628,7 +715,6 @@ fun TorchCanvasIcon(modifier: Modifier = Modifier, isOn: Boolean = false) {
         val w = size.width
         val h = size.height
 
-        // Flashlight Head
         val headPath = Path().apply {
             moveTo(w * 0.3f, h * 0.25f)
             lineTo(w * 0.7f, h * 0.25f)
@@ -638,7 +724,6 @@ fun TorchCanvasIcon(modifier: Modifier = Modifier, isOn: Boolean = false) {
         }
         drawPath(path = headPath, color = iconColor, style = Stroke(width = 1.8.dp.toPx()))
 
-        // Flashlight Body
         val bodyPath = Path().apply {
             moveTo(w * 0.38f, h * 0.42f)
             lineTo(w * 0.62f, h * 0.42f)
@@ -649,7 +734,6 @@ fun TorchCanvasIcon(modifier: Modifier = Modifier, isOn: Boolean = false) {
         drawPath(path = bodyPath, color = iconColor, style = Stroke(width = 1.8.dp.toPx()))
 
         if (isOn) {
-            // Light rays when ON
             drawLine(iconColor, Offset(w * 0.3f, h * 0.18f), Offset(w * 0.2f, h * 0.06f), strokeWidth = 1.8.dp.toPx())
             drawLine(iconColor, Offset(w * 0.5f, h * 0.15f), Offset(w * 0.5f, h * 0.04f), strokeWidth = 1.8.dp.toPx())
             drawLine(iconColor, Offset(w * 0.7f, h * 0.18f), Offset(w * 0.8f, h * 0.06f), strokeWidth = 1.8.dp.toPx())

@@ -1,19 +1,15 @@
 # Add project specific ProGuard rules here.
-# You can control the set of applied configuration files using the
-# proguardFiles setting in build.gradle.
 
-# Shizuku UserService & AIDL Interfaces - Keep these names stable in release APKs.
--keep class com.PriyanshuDeveloper.turbooverlay.PrivilegedShellService { <init>(); *; }
--keep class com.PriyanshuDeveloper.turbooverlay.IPrivilegedShellService { *; }
--keep interface com.PriyanshuDeveloper.turbooverlay.IPrivilegedShellService { *; }
--keep class com.PriyanshuDeveloper.turbooverlay.IPrivilegedShellService$* { *; }
--keep interface com.PriyanshuDeveloper.turbooverlay.IPrivilegedShellService$* { *; }
+# Keep PhoenixEngine Services, Core, Models, and Broadcast Receivers
+-keep class com.priyanshudeveloper.aod.phoenixengine.** { *; }
+-keepclassmembers class com.priyanshudeveloper.aod.phoenixengine.** { *; }
 
-# Keep Shizuku library classes & interfaces completely
--keep class moe.** { *; }
--keep interface moe.** { *; }
--keep class rikka.** { *; }
--keep interface rikka.** { *; }
+# Keep Activities
+-keep class com.priyanshudeveloper.aod.MainActivity { *; }
+-keep class com.priyanshudeveloper.aod.AodActivity { *; }
 
-# Keep View Binding classes
--keep class com.PriyanshuDeveloper.turbooverlay.databinding.** { *; }
+# Keep Coroutines StateFlow & Jetpack Compose
+-keepclassmembers class * extends kotlinx.coroutines.flow.MutableStateFlow { *; }
+
+# Suppress reflection warnings for framework PowerProfile
+-dontwarn com.android.internal.os.PowerProfile

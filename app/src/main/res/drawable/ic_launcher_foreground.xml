@@ -1,43 +1,94 @@
 <?xml version="1.0" encoding="utf-8"?>
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <path
-        android:fillColor="#44000000"
-        android:pathData="M28,78h58l8,8H36z" />
-    <path
-        android:fillColor="#CCFFFFFF"
-        android:pathData="M20,37h5v34h-5z" />
-    <path
-        android:fillColor="#FF111827"
-        android:pathData="M28,29h58v48H28z" />
-    <path
-        android:fillColor="#FF1F2937"
-        android:pathData="M32,34h50v36H32z" />
-    <path
-        android:fillColor="#00000000"
-        android:pathData="M32,43h50M32,52h50M32,61h50M44,34v36M56,34v36M68,34v36"
-        android:strokeColor="#30FFFFFF"
-        android:strokeWidth="1" />
-    <path
-        android:fillColor="#00000000"
-        android:pathData="M35,63L43,57L50,60L59,47L67,53L79,39"
-        android:strokeColor="#FF4CFF7C"
-        android:strokeWidth="4"
-        android:strokeLineCap="round"
-        android:strokeLineJoin="round" />
-    <path
-        android:fillColor="#FF4CFF7C"
-        android:pathData="M28,29h58v5H28z" />
-    <path
-        android:fillColor="#FFFFD166"
-        android:pathData="M61,38L51,57h8l-3,17l14,-23h-8z" />
-    <path
-        android:fillColor="#FFFFFFFF"
-        android:pathData="M39,38h8v8h-8zM40,39v6h6v-6z" />
-    <path
-        android:fillColor="#FFFFFFFF"
-        android:pathData="M37,40h-2v-1h2zM37,45h-2v-1h2zM51,40h-2v-1h2zM51,45h-2v-1h2zM41,36h1v2h-1zM45,36h1v2h-1zM41,46h1v2h-1zM45,46h1v2h-1z" />
+
+    <group
+        android:pivotX="54"
+        android:pivotY="54"
+        android:scaleX="0.78"
+        android:scaleY="0.78">
+
+        <!-- Leaf Outline & Stem -->
+        <path
+            android:strokeWidth="3.2"
+            android:strokeLineCap="round"
+            android:strokeLineJoin="round"
+            android:fillColor="#00000000"
+            android:pathData="M 32,83 C 34,78 38,72 40,70 C 28,58 28,45 42,32 C 52,22 68,20 78,24 C 74,38 72,56 58,66 C 48,73 41,71 40,70">
+            <aapt:attr name="android:strokeColor">
+                <gradient
+                    android:type="linear"
+                    android:startX="32"
+                    android:startY="83"
+                    android:endX="78"
+                    android:endY="24">
+                    <item android:color="#D946EF" android:offset="0.0" />
+                    <item android:color="#A855F7" android:offset="0.3" />
+                    <item android:color="#3B82F6" android:offset="0.65" />
+                    <item android:color="#06B6D4" android:offset="0.85" />
+                    <item android:color="#22D3EE" android:offset="1.0" />
+                </gradient>
+            </aapt:attr>
+        </path>
+
+        <!-- Center Clock Circle -->
+        <path
+            android:strokeWidth="2.8"
+            android:fillColor="#00000000"
+            android:pathData="M 48,50 A 2.5,2.5 0 1,1 53,50 A 2.5,2.5 0 1,1 48,50">
+            <aapt:attr name="android:strokeColor">
+                <gradient
+                    android:type="linear"
+                    android:startX="45"
+                    android:startY="55"
+                    android:endX="55"
+                    android:endY="45">
+                    <item android:color="#A855F7" android:offset="0.0" />
+                    <item android:color="#3B82F6" android:offset="1.0" />
+                </gradient>
+            </aapt:attr>
+        </path>
+
+        <!-- Minute Hand (pointing top-right) -->
+        <path
+            android:strokeWidth="3.2"
+            android:strokeLineCap="round"
+            android:pathData="M 52,48 L 68,32">
+            <aapt:attr name="android:strokeColor">
+                <gradient
+                    android:type="linear"
+                    android:startX="52"
+                    android:startY="48"
+                    android:endX="68"
+                    android:endY="32">
+                    <item android:color="#3B82F6" android:offset="0.0" />
+                    <item android:color="#22D3EE" android:offset="1.0" />
+                </gradient>
+            </aapt:attr>
+        </path>
+
+        <!-- Hour Hand (pointing top-left) -->
+        <path
+            android:strokeWidth="3.2"
+            android:strokeLineCap="round"
+            android:pathData="M 48,48 L 40,40">
+            <aapt:attr name="android:strokeColor">
+                <gradient
+                    android:type="linear"
+                    android:startX="48"
+                    android:startY="48"
+                    android:endX="40"
+                    android:endY="40">
+                    <item android:color="#A855F7" android:offset="0.0" />
+                    <item android:color="#3B82F6" android:offset="1.0" />
+                </gradient>
+            </aapt:attr>
+        </path>
+
+    </group>
+
 </vector>

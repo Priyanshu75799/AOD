@@ -10,6 +10,13 @@ object AodPrefs {
     private const val KEY_SCREEN_OFF_TIMER = "screen_off_timer"
     private const val KEY_REDUCE_BRIGHTNESS_AFTER = "reduce_brightness_after"
 
+    // New preferences for v1.3
+    private const val KEY_TIME_FORMAT = "time_format"
+    private const val KEY_SHOW_MEDIA_PLAYER = "show_media_player"
+    private const val KEY_OLED_BURN_IN_PROTECTION = "oled_burn_in_protection"
+    private const val KEY_BATTERY_ARC_COLOR = "battery_arc_color"
+    private const val KEY_AOD_UPDATE_INTERVAL = "aod_update_interval"
+
     fun isScreenSaverEnabled(context: Context): Boolean {
         val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
         return prefs.getBoolean(KEY_SCREEN_SAVER_ENABLED, false)
@@ -46,6 +53,79 @@ object AodPrefs {
     fun saveReduceBrightnessAfter(context: Context, value: String) {
         val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
         prefs.edit().putString(KEY_REDUCE_BRIGHTNESS_AFTER, value).apply()
+    }
+
+    // Time Format Preference (Default: 24-Hour)
+    fun getClockFormat(context: Context): String {
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        return prefs.getString(KEY_TIME_FORMAT, "24-Hour") ?: "24-Hour"
+    }
+
+    fun saveClockFormat(context: Context, format: String) {
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        prefs.edit().putString(KEY_TIME_FORMAT, format).apply()
+    }
+
+    // Media Player Preference (Default: false)
+    fun isMediaPlayerEnabled(context: Context): Boolean {
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        return prefs.getBoolean(KEY_SHOW_MEDIA_PLAYER, false)
+    }
+
+    fun setMediaPlayerEnabled(context: Context, enabled: Boolean) {
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        prefs.edit().putBoolean(KEY_SHOW_MEDIA_PLAYER, enabled).apply()
+    }
+
+    // OLED Burn-In Protection Preference (Default: true)
+    fun isOledProtectionEnabled(context: Context): Boolean {
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        return prefs.getBoolean(KEY_OLED_BURN_IN_PROTECTION, true)
+    }
+
+    fun setOledProtectionEnabled(context: Context, enabled: Boolean) {
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        prefs.edit().putBoolean(KEY_OLED_BURN_IN_PROTECTION, enabled).apply()
+    }
+
+    // Battery Arc Color Preference (Default: "#FFFFFF" White)
+    fun getArcColorHex(context: Context): String {
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        return prefs.getString(KEY_BATTERY_ARC_COLOR, "#FFFFFF") ?: "#FFFFFF"
+    }
+
+    fun saveArcColorHex(context: Context, hexColor: String) {
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        prefs.edit().putString(KEY_BATTERY_ARC_COLOR, hexColor).apply()
+    }
+
+    // AOD Refresh Rate / Update Interval Preference (Default: "1sec")
+    fun getAodUpdateInterval(context: Context): String {
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        return prefs.getString(KEY_AOD_UPDATE_INTERVAL, "1sec") ?: "1sec"
+    }
+
+    fun saveAodUpdateInterval(context: Context, interval: String) {
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        prefs.edit().putString(KEY_AOD_UPDATE_INTERVAL, interval).apply()
+    }
+
+    fun getAodUpdateIntervalMillis(context: Context): Long {
+        return updateIntervalToMillis(getAodUpdateInterval(context))
+    }
+
+    fun updateIntervalToMillis(interval: String): Long {
+        return when (interval) {
+            "500ms" -> 500L
+            "1sec" -> 1_000L
+            "2sec" -> 2_000L
+            "3sec" -> 3_000L
+            "5sec" -> 5_000L
+            "7sec" -> 7_000L
+            "10sec" -> 10_000L
+            "15sec" -> 15_000L
+            else -> 1_000L
+        }
     }
 
     fun timerToMillis(value: String): Long {

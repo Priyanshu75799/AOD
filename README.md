@@ -1,133 +1,98 @@
-# TurboOverlay 🚀
+# AOD - Always-On Display & Battery Monitor
 
-**TurboOverlay** is a lightweight, high-performance, real-time system monitoring tool and game optimizer for Android devices. Powered by **Shizuku**, it displays critical hardware metrics in an intuitive floating overlay panel and applies universal performance ADB tweaks without requiring root access.
-
----
-
-## 🔥 Key Features
-
-### 1. 🛡️ Automatic Shizuku Detection & Direct Permission Popup
-- **Instant Service Detection**: Automatically detects active Shizuku background service on app launch or resume.
-- **Direct Permission Dialog**: Automatically prompts the native Shizuku permission dialog inside the app—no need to switch to the Shizuku app manually.
-- **Rootless Elevated Privileges**: Uses AIDL binder interface for secure, low-overhead shell execution.
-
-### 2. ⚡ Real-Time CPU Monitoring & Per-Core Frequency Analyzer
-- **CPU Load Graph**: Real-time total CPU utilization percentage (0–100%) with custom canvas graph rendering and history buffering.
-- **Per-Core Clock Frequencies**: Displays live frequencies for Cores 0 through 7 in **MHz** and **GHz**.
-- **Universal Core Engine**: Multi-path sysfs fallback (`scaling_cur_freq`, `cpuinfo_cur_freq`, batch `cat` execution) with automatic core online/offline state detection.
-
-### 3. 🔋 Battery & Power Consumption Analytics
-- **Live Temperature Graph**: Real-time battery thermal monitoring (°C).
-- **Power Draw Readout**: Real-time Voltage (V), Current (mA), and Power consumption in Watts (W).
-- **Charging State Intelligence**: Automatically adjusts current direction and power draw calculations based on charging status.
-
-### 4. 🌐 Network Speed & Ping Latency Tracker
-- **Real-Time Bandwidth**: Live Download and Upload rates in KB/s, MB/s, and Mbps.
-- **Ping Latency (ms)**: Real-time network latency ping indicator designed for lag-free online gaming (BGMI, Free Fire, PUBG, Call of Duty, Mobile Legends).
-- **Signal Strength**: Real-time cellular/Wi-Fi signal strength in dBm.
-
-### 5. 🎮 Universal Game Performance Optimizer & ADB Commands
-- **One-Tap Performance Boost**:
-  - Compacts background memory (`cmd activity compaction perform`).
-  - Trims system RAM and kills cached background processes (`am trim-memory`, `am kill-all`).
-  - Disables battery saver throttling & Doze idle mode (`cmd power set-fixed-performance-mode-enabled true`, `cmd deviceidle disable all`, `settings put global low_power 0`).
-- **Auto Performance Per Minute (PM Mode)**:
-  - Automatically re-applies universal performance ADB commands every 60 seconds while enabled to maintain peak FPS.
-- **Instant Toast Feedback**:
-  - Displays a clear bottom-screen toast message on every manual tap and every automatic per-minute boost execution.
-- **100% Universal Device Support**:
-  - Fully compatible with Snapdragon, MediaTek Dimensity/Helio, Samsung Exynos, Google Tensor, Unisoc, Xiaomi MIUI/HyperOS, Realme UI, OneUI, ColorOS, OxygenOS, and Stock Android.
-
-### 6. 🪟 Interactive Floating Overlay Window
-- **Floating Handle**: Edge-snapping draggable handle overlayable over any game or app.
-- **Compact Dashboard Panel**: Quick tabs for CPU Graph, Core Frequencies, Battery Metrics, Network Metrics, and Performance Controls.
-- **Gesture Controls**: Smooth swipe & tap gestures for hiding or expanding the monitor.
-- **Haptic Feedback**: Touch animations and tactile feedback on button interactions.
-
-### 7. 🔒 100% Private, Secure & Offline
-- **Zero Internet Access**: Complete privacy with zero network calls, zero telemetry, and zero remote data collection.
-- **Lightweight Footprint**: Optimized background thread handlers for minimal CPU/battery usage while gaming.
+An ultra-power-efficient, feature-packed **Always-On Display (AOD)**, Charging Telemetry Monitor, and Battery Dashboard application for Android built with Jetpack Compose. Designed specifically for charging telemetry, screen saver customization, battery usage analytics, and **AMOLED/LCD Display Protection**.
 
 ---
 
-## 🛠️ Prerequisites
+## 🌟 Version Comparison (v1.2 vs v1.3)
 
-1. **Android Version**: Android 8.0 (Oreo / API level 26) or higher.
-2. **Shizuku Service**: Installed and activated on your device.
-   - Download Shizuku from [Play Store](https://play.google.com/store/apps/details?id=moe.shizuku.privileged.api) or [GitHub Releases](https://github.com/RikkaApps/Shizuku/releases).
-   - Start Shizuku via **Wireless Debugging** or **ADB command**:
-     ```bash
-     adb shell sh /sdcard/Android/data/moe.shizuku.privileged.api/start.sh
-     ```
-3. **Display Over Other Apps Permission**: Required to render the floating window over games.
-
----
-
-## 📖 How to Use the App (User Manual)
-
-1. **Setup Permissions**:
-   - Open **Shizuku** and ensure the service is running.
-   - Open **TurboOverlay**. When prompted, grant **Shizuku permission** on the auto-popup dialog.
-   - Allow **Display over other apps** (Overlay) permission when prompted by Android settings.
-
-2. **Launch the Overlay**:
-   - Tap **START OVERLAY**. A small transparent handle will appear near the top-left edge of your screen.
-
-3. **Navigate the Floating Overlay**:
-   - Tap or swipe the edge handle to open the compact monitoring dashboard over any game or app.
-   - **CPU Tab (Chip Icon)**: Click once to view the live CPU load graph. Click again to view individual **Core Frequencies (Cores 0–7)**.
-   - **Battery Tab (Battery Icon)**: View live battery temperature graph, Voltage (V), Current (mA), and Power draw (W).
-   - **Network Tab (Speed Icon)**: View live Download/Upload speed, Ping Latency (ms), and Signal Strength (dBm).
-   - **Performance Tab (Bolt Icon)**: 
-     - Tap **Boost** for instant one-tap performance optimization.
-     - Toggle **PM Mode (Performance Per Minute)** to automatically re-apply ADB performance tweaks every 60 seconds while gaming.
-     - A bottom toast notification will confirm whenever boost commands are executed.
-   - **Hide Panel**: Tap the minimize icon or swipe towards the screen edge to collapse the dashboard back into the handle.
-
-4. **Stop the Service**:
-   - Tap the red **STOP APP** button in the main screen anytime to stop the floating overlay service completely (works with or without Shizuku).
+| Feature / Capabilities | 📌 Version 1.2 | 🚀 Version 1.3 (Latest) |
+| :--- | :---: | :---: |
+| **Always-On Display Overlay** | ✅ Included | ✅ Enhanced with dynamic update throttling |
+| **Screen Saver & Timers** | ✅ Included | ✅ Shifted to dedicated 'AOD controls' hub |
+| **Reduce Brightness Delay** | ✅ Included | ✅ Shifted to dedicated 'AOD controls' hub |
+| **Main Dashboard Layout** | Screen Saver & Brightness blocks | Information Window + Battery Usage Graph |
+| **Navigation & Settings Hub** | Single Screen Dashboard | Dashboard + Settings + AOD Controls Hub |
+| **System Back Gesture (`BackHandler`)** | Exited App | In-App Back Navigation (`AodControls` → `Settings` → `Dashboard`) |
+| **Charging Telemetry Monitor** | Single Live Feed | **Independent Service** with **Min/Max Current, Voltage & Power** |
+| **Battery Usage Graph** | Basic Area Curve | **Stock Android Pixel Style** (Blue curve + Dotted charging projection) |
+| **Top 3 Battery Consuming Apps** | ❌ Not available | ✅ Real-time analysis with instant `ON_RESUME` permission refresh |
+| **OEM Extra Dim Feature Detection** | Basic dimming | ✅ Auto-detects Xiaomi, Oppo, Vivo, Realme, Samsung & Pixel Extra Dim |
+| **Power Button Fail-Safe Dismissal** | Basic unlock | ✅ Instant dismissal on physical power button for ALL lockscreen types |
+| **Clock Time Format** | Fixed 12-Hour AM/PM | ✅ Selectable **24-Hour** (`13:45`, Default) vs **12-Hour AM/PM** |
+| **Media Player Widget on AOD** | ❌ Not available | ✅ Show currently playing track title & artist (Default: OFF) |
+| **OLED Burn-in Protection Toggle** | Always Active | ✅ Toggleable pixel shifting (Default: ON, disable for LCD to save CPU) |
+| **Battery Gauge Arc Color Picker** | Fixed Blue | ✅ **10 Curated Colors** (White [Default], Blue, Green, Gold, Purple, Red, Pink, Cyan, Orange, Teal) |
+| **AOD Telemetry Update Frequency** | Fixed 1000ms | ✅ Selectable rate (`500ms`, `1sec` Default, `2sec`, `3sec`, `5sec`, `7sec`, `10sec`, `15sec`) |
+| **Instant Battery Usage Refresh** | On App Start | ✅ Header Refresh Button + Instant `ACTION_BATTERY_CHANGED` receiver |
+| **App Launch / Splash Background** | Default Light White | ✅ Solid Pure Black (`#000000`) theme background |
 
 ---
 
-## 🚀 How to Build & Run
+## 🚀 Key Features in Version 1.3
 
-### 1. Clone the repository
-```bash
-git clone https://github.com/Priyanshu75799/TurboOverlays.git
-cd TurboOverlays
-```
+### 📱 1. Navigation & Settings Restructuring
+- **Top Bar Gear Icon**: Main Dashboard top-right corner features a Settings Gear icon leading directly to the Settings Section.
+- **AOD Controls Hub**: Settings section features a dedicated **'AOD controls'** block, housing Screen Saver timers, Reduce Brightness options, and AOD Refresh Rate settings.
+- **System Back Gesture Navigation**: Integrated `BackHandler` ensures pressing the device's back button navigates backwards smoothly (`AodControls` → `Settings` → `Dashboard`) without exiting the app.
 
-### 2. Build Debug or Release APK
-- **Debug Build**:
-  ```bash
-  ./gradlew assembleDebug
-  ```
-- **Release Build**:
-  ```bash
-  ./gradlew assembleRelease
-  ```
+### ⚡ 2. Independent Charging Telemetry Monitor Service
+- **Dedicated Telemetry Service**: Operates as an independent foreground service (`ChargingTelemetryService`) without clashing with `AodForegroundService`.
+- **Min/Max Charging Telemetry Window**: Real-time recording of:
+  - **Min & Max Charging Current (mA)**
+  - **Min & Max Charging Voltage (mV)**
+  - **Min & Max Charging Power (Wattage - W)**
+  - Live charging metrics with instant Reset Stats capability.
 
-Output APK will be generated under `app/build/outputs/apk/`.
+### 📊 3. Stock Android Pixel Style Battery Usage Graph
+- **Pixel Stock Design**: Styled to match Stock Android / Pixel Battery usage screens:
+  - Current battery level percentage header (`18%`).
+  - Right Y-Axis grid lines & percentage labels (`100%`, `50%`, `0%`).
+  - Bottom X-Axis labels (`24 hrs ago` and remaining time estimate e.g. `8 hrs left until full`).
+  - **Solid Light Blue Curve (`#8AB4F8`)**: Past battery level trends with translucent vertical fill.
+  - **Dotted Projected Charging Line (`. . . . . .`)**: Slopes upwards towards `100%` when phone is plugged in.
+- **Top 3 Battery Consuming Apps**: Auto-refreshing app usage statistics with instant `ON_RESUME` permission grant detection.
+
+### 🌙 4. Extra Dim Feature Detection & Power Saving
+- **OEM Extra Dim Detection**: Automatically detects Extra Dim, Night Mode, and Eye Protection features across Android 12+, Xiaomi/MIUI, Oppo/ColorOS, Vivo/FuntouchOS, Realme, Samsung, and Pixel devices.
+- **Dynamic Advice Banner**: Recommends enabling Extra Dim in Settings for extra battery savings.
+- **Ultra-Dimming AOD Scrim**: Automatically applies ultra-low screen brightness (`0.0005f`) and dark scrim overlays when Extra Dim is active.
+
+### 🔒 5. Universal Power Button Fail-Safe Dismissal
+- **Physical Power Button Interception**: Pressing the physical power button (`KEYCODE_POWER`) immediately dismisses `AodActivity`.
+- **Universal Lockscreen Support**: Handles `ACTION_SCREEN_OFF`, `ACTION_SCREEN_ON`, `ACTION_USER_PRESENT`, and `ACTION_CLOSE_SYSTEM_DIALOGS`, ensuring seamless dismissal for Fingerprint, PIN, Pattern, Swipe, and No Lock Screen devices without crashes or bugs.
+
+### ⚙️ 6. Extended Customization & Options
+- **Clock Time Format**: Toggle between **24-Hour** (`13:45`, Default) and **12-Hour AM/PM** (`1:45 PM`) formats.
+- **Media Player Widget**: Show currently playing music title and artist details on the AOD screen (Default: OFF).
+- **OLED Burn-in Protection Toggle**: Enable minute-by-minute pixel shifting (Default: ON). LCD display users can turn this OFF to save CPU cycles.
+- **Battery Gauge Arc Color Selector**: Choose from 10 curated color schemes (White [Default], Electric Blue, Emerald Green, Sunfire Gold, Cyber Purple, Flame Red, Neon Pink, Cyan Ice, Amber Orange, Mint Teal).
+- **AOD Telemetry Update Frequency**: Selectable refresh intervals (`500ms`, `1sec` Default, `2sec`, `3sec`, `5sec`, `7sec`, `10sec`, `15sec`) controlling both AOD screen and Charging Telemetry Monitor.
 
 ---
 
-## 🏗️ Technical Architecture
+## 🛠 Tech Stack & Architecture
 
-- **Language**: Kotlin 2.1.0
-- **Build System**: Gradle 8.13.2 with Kotlin DSL (`build.gradle.kts`)
-- **Min SDK**: 26 | **Target SDK**: 35 (Android 15)
-- **Privilege & IPC**: [Shizuku API 13.1.5](https://github.com/RikkaApps/Shizuku) + Custom AIDL Service (`IPrivilegedShellService.aidl`)
-- **UI & Graphics**: Material Design 3, View Binding, Custom Canvas `GraphView`
-
----
-
-## 📄 License
-
-This project is open-source under the **MIT License**. See [LICENSE](LICENSE) for details.
+- **Language**: Kotlin 2.2+
+- **UI Framework**: Jetpack Compose (Material 3)
+- **Architecture**: MVVM / Clean Architecture with StateFlow & Coroutines
+- **Services**: Dual Independent Foreground Services (`AodForegroundService` & `ChargingTelemetryService`)
+- **Graphics**: Custom Compose Canvas Arc Gauge, Pixel Curve Charts, and `nativeCanvas` Curved Text on Path
+- **Target SDK**: Android 16 (API 36) | **Min SDK**: Android 10 (API 29)
+- **Build Optimization**: R8 / ProGuard rules enabled for Release builds
 
 ---
 
-## 👨‍💻 Author & Maintainer
+## 🚀 Getting Started
 
-Developed with ❤️ by **[Priyanshu75799](https://github.com/Priyanshu75799)**.
-If you like this project, please give it a ⭐ on GitHub!
+1. **Clone the Repository**:
+   ```bash
+   git clone https://github.com/Priyanshu75799/AOD.git
+   ```
+2. **Open in Android Studio**: Open the project folder in Android Studio (Jellyfish / Ladybug or newer).
+3. **Build & Run**:
+   - Connect an Android device (Android 10+).
+   - Select **app** and press **Run** (`Shift + F10`).
+   - Connect your charger and lock the device to experience AOD v1.3.
+
+---
