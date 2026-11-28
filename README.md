@@ -119,6 +119,21 @@ Improved AOD dismissal and screen-state handling.
 - Improved handling for power-button dismissal.
 - Designed to work with different lockscreen configurations, including PIN, Pattern, Fingerprint, Swipe, and devices without a lock screen.
 
+## 9. Screenshots
+
+- **AOD Window**
+  <img width="720" height="1600" alt="Screenshot_20261128-134355" src="https://github.com/user-attachments/assets/708b5f16-a75c-40cb-8123-2f00183593ce" />
+
+- **Dashboard**
+  <img width="720" height="1600" alt="Screenshot_20261128-192008" src="https://github.com/user-attachments/assets/0c2acc4a-de74-4a4b-a5d2-2930edf0a59a" />
+
+- **Settings**
+  <img width="720" height="1916" alt="Screenshot_20261128-133836" src="https://github.com/user-attachments/assets/8c5347b6-4278-49fb-9bcf-b9fb1ff5c8d1" />
+
+- **AOD controls**
+  <img width="720" height="1600" alt="Screenshot_20261128-133857" src="https://github.com/user-attachments/assets/22d5240d-26e9-40a7-b474-077af0fc7d0e" />
+
+
 ---
 
 ## Tech Stack & Architecture
