@@ -137,7 +137,7 @@ Improved AOD dismissal and screen-state handling.
 
 ---
 
-##10. APK Installation, Google Play Protect & Permission Setup
+## 10. APK Installation, Google Play Protect & Permission Setup
 
 AOD requires Notification Access to provide its media player controls and related functionality. Since Notification Access is a sensitive Android permission, installing AOD through a manually downloaded APK may trigger security warnings or permission restrictions.
 
