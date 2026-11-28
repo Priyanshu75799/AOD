@@ -260,7 +260,7 @@ GitHub: https://github.com/Priyanshu75799
 
 ---
 
-License
+## License
 
 AOD is proprietary software. Its source code is publicly available for viewing, but reuse, modification, redistribution, and commercial use are not permitted without prior written permission.
 
