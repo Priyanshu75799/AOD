@@ -137,6 +137,60 @@ Improved AOD dismissal and screen-state handling.
 
 ---
 
+10. APK Installation, Google Play Protect & Permission Setup
+
+AOD requires Notification Access to provide its media player controls and related functionality. Since Notification Access is a sensitive Android permission, installing AOD through a manually downloaded APK may trigger security warnings or permission restrictions.
+
+Follow the instructions below to install and configure the application.
+
+Step 1: Download and Install the APK
+
+1. Download the AOD APK from the official GitHub Releases page.
+2. Open the downloaded APK and start the installation.
+3. Google Play Protect may display a security warning or block the installation because the APK is installed outside Google Play and requests sensitive permissions.
+4. If Play Protect blocks the installation, carefully review the warning. If you have verified that the APK came from the official AOD release source and understand the risk, use the available installation options, if provided, to proceed.
+
+Important: Depending on your Android version and Play Protect policies, you may not be given an option to bypass the warning. Do not assume that every device will allow installation.
+
+Step 2: Allow Restricted Settings
+
+After installation, Android may prevent AOD from receiving certain sensitive permissions until restricted settings are explicitly allowed.
+
+1. Open your device's Settings.
+2. Navigate to Apps → AOD → App Info.
+3. Tap the three-dot menu in the top-right corner.
+4. Select Allow restricted settings.
+5. Authenticate using your device's PIN, password, pattern, or biometric verification.
+6. Return to AOD's App Info and configure the required permissions.
+
+The exact menu names and availability may vary depending on your Android version and device manufacturer.
+
+Step 3: Enable Notification Access
+
+1. Open Settings → Special app access → Notification access.
+2. Find AOD in the application list.
+3. Enable Notification Access for AOD.
+4. Confirm the permission request when prompted.
+
+This permission is required for AOD to interact with supported media notifications and provide media controls such as Play/Pause and Previous/Next.
+
+Google Play Protect: Important Information
+
+- Google Play Protect may warn about or block an APK installation. Its response depends on the APK, device, Android version, and security policies.
+- If you choose to proceed after verifying the APK's source, you may need to use the installation options provided by your device.
+- Do not permanently disable Google Play Protect. Keeping it enabled is recommended.
+- Allowing restricted settings does not require permanently disabling Google Play Protect. Both settings serve different purposes.
+
+Privacy & Permission Disclosure
+
+Notification Access is a sensitive permission. When enabled, Android allows AOD to access notification information made available to its notification listener service. This can include notification text and media-related information.
+
+Only grant this permission if you understand its purpose and trust the application.
+
+AOD users should review all permission requests before granting them. Never approve a permission request without understanding why the application needs it.
+
+---
+
 ## Tech Stack & Architecture
 
 | Component | Technology |
