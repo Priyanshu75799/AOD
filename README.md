@@ -1,38 +1,37 @@
-# AOD - Always-On Display & Battery Monitor
+AOD - Always-On Display & Battery Monitor
 
-**AOD** is an ultra-power-efficient, feature-rich Always-On Display (AOD), Charging Telemetry Monitor, and Battery Dashboard application for Android, built using Kotlin and Jetpack Compose.
+AOD is a lightweight, feature-rich Always-On Display (AOD), Charging Telemetry Monitor, and Battery Dashboard application for Android, built with Kotlin and Jetpack Compose.
 
-Designed to provide customizable always-on screen information, real-time charging telemetry, battery analytics, and OLED/LCD display protection.
-
----
-
-## What's New in Version 1.4
-
-Version 1.4 is a major stability and functionality update focused on fixing the issues identified in v1.3, improving device compatibility, and refining the overall AOD experience.
-
-### Major Improvements & Bug Fixes
-
-| Feature / Issue | Version 1.3 | Version 1.4 |
-| :--- | :--- | :--- |
-| **AOD Media Controls** | Displayed track title and artist only | Play/Pause, and Previous/Next controls |
-| **App Stability** | Frequent application crashes reported | Major crash-related issues fixed |
-| **AOD Window Compatibility** | AOD window crashes observed on certain devices | Device-specific AOD window stability issues addressed |
-| **OLED Burn-in Protection** | Pixel shifting did not work reliably | OLED protection behavior improved |
-| **AOD Window Lifecycle** | Stability and cleanup limitations | Improved receiver cleanup and lifecycle handling |
-| **Power Button Dismissal** | Less consistent dismissal behavior | Improved power-button dismissal handling |
-| **Codebase Optimization** | Standard implementation | Code cleanup, unused resource/import removal, and optimized release build |
-
-**Version 1.4 focuses on reliability:** Previously reported crashes, media-control limitations, and OLED protection issues have been addressed and tested by the developer.
+It provides a customizable always-on screen, real-time charging telemetry, battery information, and display protection features for OLED and LCD devices.
 
 ---
 
-## Key Features
+What's New in Version 1.4
 
-### 1. Always-On Display & Customization
+Version 1.4 is a major stability and functionality update focused on resolving issues identified in v1.3, improving device compatibility, and refining the overall AOD experience.
 
-- **Custom AOD Interface:** Displays essential information on the screen while the device is idle.
-- **Clock Time Format:** Switch between 24-hour format (`13:45`, Default) and 12-hour AM/PM format (`1:45 PM`).
-- **Battery Gauge Arc:** Choose from 10 curated color schemes:
+Major Improvements & Bug Fixes
+
+Feature / Issue| Version 1.3| Version 1.4
+AOD Media Controls| Displayed track title and artist only| Added Play/Pause and Previous/Next controls
+App Stability| Frequent application crashes reported| Major crash-related issues fixed
+AOD Window Compatibility| AOD window crashes on certain devices| Device-specific stability improvements
+OLED Burn-in Protection| Pixel shifting did not work reliably| Improved pixel-shifting behavior
+AOD Window Lifecycle| Stability and cleanup limitations| Improved receiver cleanup and lifecycle handling
+Power Button Dismissal| Less consistent dismissal behavior| Improved power-button dismissal handling
+Codebase Optimization| Standard implementation| Code cleanup, unused resource/import removal, and release build optimization
+
+Version 1.4 focuses on reliability, addressing previously reported crashes, media-control limitations, and OLED protection issues.
+
+---
+
+Key Features
+
+1. Always-On Display & Customization
+
+- Custom AOD Interface: Displays essential information while the device is idle.
+- Clock Time Format: Switch between 24-hour format ("13:45", default) and 12-hour AM/PM format ("1:45 PM").
+- Battery Gauge Arc: Choose from 10 curated color schemes:
   - White (Default)
   - Electric Blue
   - Emerald Green
@@ -43,27 +42,26 @@ Version 1.4 is a major stability and functionality update focused on fixing the 
   - Cyan Ice
   - Amber Orange
   - Mint Teal
-- **AOD Refresh Frequency:** Choose from configurable update intervals of `500ms`, `2sec`, `3sec`, `5sec` (Default), `7sec`, `10sec`, and `15sec`.
+- AOD Refresh Frequency: Configure update intervals of "500ms", "2sec", "3sec", "5sec" (default), "7sec", "10sec", and "15sec".
 
-### 2. Media Player Widget
+2. Media Player Widget
 
-Control and monitor currently playing media directly from the AOD window.
+Control currently playing media directly from the AOD window.
 
-- Displays current track title and artist.
-- Seek slider for playback position.
-- Elapsed and total playback time.
+- Displays the current track title and artist.
+- Play/Pause controls.
 - Previous and Next track controls.
-- Media widget is disabled by default and can be enabled through settings.
+- Disabled by default and can be enabled through Settings.
 
-### 3. OLED Burn-in Protection
+3. OLED Burn-in Protection
 
-- **Pixel Shifting:** Minute-by-minute pixel position adjustment to help reduce the risk of static image retention on OLED displays.
-- **Configurable Protection:** Enabled by default.
-- **LCD Compatibility:** LCD users can disable pixel shifting to avoid unnecessary CPU activity.
+- Pixel Shifting: Minute-by-minute pixel position adjustment to help reduce the risk of static image retention on OLED displays.
+- Configurable Protection: Enabled by default.
+- LCD Compatibility: LCD users can disable pixel shifting to avoid unnecessary CPU activity.
 
-### 4. Independent Charging Telemetry Monitor
+4. Independent Charging Telemetry Monitor
 
-A dedicated `ChargingTelemetryService` operates independently of `AodForegroundService`.
+A dedicated "ChargingTelemetryService" operates independently of "AodForegroundService".
 
 Real-time charging statistics include:
 
@@ -73,24 +71,23 @@ Real-time charging statistics include:
 - Live charging metrics.
 - Instant Reset Stats functionality.
 
-### 5. Battery Usage Dashboard
+5. Battery Usage Dashboard
 
-A battery monitoring interface inspired by the visual design of Stock Android / Google Pixel battery statistics.
+A battery monitoring interface inspired by the visual design of Stock Android and Google Pixel battery statistics.
 
 - Current battery percentage.
-- Battery usage history graph.
-- Percentage-based Y-axis with grid lines.
+- Battery level graph with percentage-based Y-axis.
 - Time-based X-axis labels.
-- Solid light-blue battery history curve (`#8AB4F8`).
+- Light-blue graph styling ("#8AB4F8").
 - Translucent graph fill.
-- Dotted projected charging curve when the device is plugged in.
-- System battery settings integration for detailed per-app battery usage.
+- Projected charging curve when the device is plugged in.
+- Direct access to Android System Battery Settings for detailed per-app battery usage.
 
-### 6. Extra Dim Detection & Power Saving
+6. Extra Dim Detection & Power Saving
 
 Detects supported system-level display dimming and eye-protection features across Android and various OEM implementations.
 
-Supported detection targets include:
+Detection targets include:
 
 - Stock Android / Pixel
 - Xiaomi / MIUI
@@ -103,21 +100,25 @@ Additional behavior:
 
 - Detects supported Extra Dim, Night Mode, and Eye Protection settings.
 - Displays contextual recommendations for additional dimming.
-- Applies an ultra-low-brightness AOD scrim when supported Extra Dim conditions are active.
+- Applies an ultra-low-brightness AOD scrim when supported Extra Dim conditions are detected.
 
-### 7. AOD Navigation & Settings
+Feature detection and availability may vary depending on the device manufacturer and Android version.
 
-- **Settings Shortcut:** Gear icon on the main dashboard provides direct access to Settings.
-- **AOD Controls Hub:** Dedicated section for screen saver timers, brightness reduction, and AOD refresh settings.
-- **Back Navigation:** Integrated Android `BackHandler` for navigating between AOD Controls, Settings, and Dashboard.
+7. AOD Navigation & Settings
 
-### 8. Power Button & Lockscreen Handling
+- Settings Shortcut: Gear icon on the main dashboard provides direct access to Settings.
+- AOD Controls Hub: Dedicated section for screen saver timers, brightness reduction, and AOD refresh settings.
+- Back Navigation: Integrated Android "BackHandler" for navigating between AOD Controls, Settings, and Dashboard.
+
+8. Power Button & Lockscreen Handling
 
 Improved AOD dismissal and screen-state handling.
 
-- Handles supported screen-state broadcasts such as `ACTION_SCREEN_OFF`, `ACTION_SCREEN_ON`, `ACTION_USER_PRESENT`, and `ACTION_CLOSE_SYSTEM_DIALOGS`.
-- Improved handling for power-button dismissal.
+- Handles supported screen-state broadcasts, including "ACTION_SCREEN_OFF", "ACTION_SCREEN_ON", "ACTION_USER_PRESENT", and "ACTION_CLOSE_SYSTEM_DIALOGS".
+- Improved power-button dismissal handling.
 - Designed to work with different lockscreen configurations, including PIN, Pattern, Fingerprint, Swipe, and devices without a lock screen.
+
+---
 
 ## 9. Screenshots
 
