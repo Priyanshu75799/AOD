@@ -205,10 +205,10 @@ GitHub: https://github.com/Priyanshu75799
 
 ---
 
-## License
+License
 
-AOD is licensed under the **MIT License**.
+AOD is proprietary software. Its source code is publicly available for viewing, but reuse, modification, redistribution, and commercial use are not permitted without prior written permission.
 
-You are free to use, copy, modify, merge, publish, distribute, sublicense, and sell copies of the software, subject to the conditions of the MIT License.
+See the "LICENSE" (LICENSE) file for details.
 
-See the [LICENSE](LICENSE) file for the complete license text.
+Previously released MIT-licensed versions remain subject to their original license terms.
