@@ -264,6 +264,6 @@ GitHub: https://github.com/Priyanshu75799
 
 AOD is proprietary software. Its source code is publicly available for viewing, but reuse, modification, redistribution, and commercial use are not permitted without prior written permission.
 
-See the "LICENSE" (LICENSE) file for details.
+See the [LICENSE](LICENSE) file for complete licensing terms.
 
 Previously released MIT-licensed versions remain subject to their original license terms.
