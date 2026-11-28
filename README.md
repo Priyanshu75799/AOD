@@ -14,7 +14,7 @@ Version 1.4 is a major stability and functionality update focused on fixing the 
 
 | Feature / Issue | Version 1.3 | Version 1.4 |
 | :--- | :--- | :--- |
-| **AOD Media Controls** | Displayed track title and artist only | Added seek slider, elapsed/total playback time, and Previous/Next controls |
+| **AOD Media Controls** | Displayed track title and artist only | Play/Pause, and Previous/Next controls |
 | **App Stability** | Frequent application crashes reported | Major crash-related issues fixed |
 | **AOD Window Compatibility** | AOD window crashes observed on certain devices | Device-specific AOD window stability issues addressed |
 | **OLED Burn-in Protection** | Pixel shifting did not work reliably | OLED protection behavior improved |
